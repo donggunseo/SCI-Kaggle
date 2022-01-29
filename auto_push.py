@@ -1,3 +1,5 @@
+# Usage: ./auto_push [input your commit msg]
+
 import os
 import sys
 
