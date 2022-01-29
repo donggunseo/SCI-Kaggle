@@ -3,5 +3,9 @@ test/
 output/
 .*/
 wandb/
+<<<<<<< HEAD
 longformer-baseline_best/
 dataset/
+=======
+best_model/
+>>>>>>> 4855ad7bb9e9367b6cc18533cc49175fdcb41bf2
