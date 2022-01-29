@@ -3,6 +3,9 @@
 import os
 import sys
 
+if len(sys.argv) != 2:
+    print("Usage: python ./auto_push commit_msg")
+    exit()
 msg = sys.argv[1]
 
 os.system("git add .")
