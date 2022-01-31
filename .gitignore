@@ -1,7 +1,5 @@
-train/
-test/
+__pycache__/
 output/
 .*/
 wandb/
 best_model/
-__pycache__/
