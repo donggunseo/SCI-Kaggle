@@ -3,9 +3,9 @@ from transformers import AutoModelForTokenClassification, TrainingArguments, Tra
 from datasets import concatenate_datasets
 from trainer_fb import FBTrainer
 import wandb
-from utils_fb import postprocess_fb_predictions
+from utils_fb import postprocess_fb_predictions, calc_overlap, score_feedback_comp
 import os
-
+import numpy as np
 def train():
     os.environ["TOKENIZERS_PARALLELISM"] = "false"
     kfold_tokenized_datasets, l2i, i2l, N_LABELS, data_collator, kfold_examples, tokenizer = prepare_datasets()
@@ -19,9 +19,9 @@ def train():
         model = AutoModelForTokenClassification.from_pretrained('allenai/longformer-base-4096', config = config)
         training_args = TrainingArguments(
             output_dir = './output/longformer-baseline_fold'+ str(fold),
-            evaluation_strategy = 'epoch',
-            per_device_train_batch_size = 8,
-            per_device_eval_batch_size = 8,
+            evaluation_strategy = 'steps',
+            per_device_train_batch_size = 4,
+            per_device_eval_batch_size = 4,
             gradient_accumulation_steps = 2,
             learning_rate = 5e-5,
             weight_decay = 0.01,
@@ -30,11 +30,11 @@ def train():
             warmup_ratio = 0.1,
             logging_strategy = 'steps',
             logging_steps = 50,
-            save_strategy = 'epoch',
+            save_strategy = 'steps',
             save_total_limit = 1,
             seed = 42,
-            # eval_steps = 50,
-            # save_steps = 50,
+            eval_steps = 100,
+            save_steps = 100,
             dataloader_num_workers = 2,
             load_best_model_at_end = True,
             metric_for_best_model = 'f1',# need to fix
@@ -47,12 +47,24 @@ def train():
                 eval_datasets = eval_datasets,
                 predictions=predictions
             )
-            formatted_predictions = [
-                {'id': i, 'class':c, 'predictionstring':p} for i,c,p in predictions.items()
-            ]
-            return formatted_predictions
-        def compute_metrics():
-            return None
+            return predictions
+        def compute_metrics(eval_examples, eval_preds):
+            f1s=[]
+            for c in ['Lead', 'Position', 'Evidence', 'Claim', 'Concluding Statement', 'Counterclaim', 'Rebuttal']:
+                pred_df = eval_preds.loc[eval_preds['class']==c].copy()
+                gt_df = eval_examples.loc[eval_examples['discourse_type']==c].copy()
+                f1 = score_feedback_comp(pred_df, gt_df)
+                f1s.append(f1)
+            return {
+                "Lead F1": f1s[0],
+                "Position F1": f1s[1],
+                "Evidence F1": f1s[2],
+                "Claim F1" : f1s[3],
+                "Concluding Statement F1": f1s[4],
+                "Counterclaim F1": f1s[5],
+                "Rebuttal F1": f1s[6],
+                "eval_f1": np.mean(f1s)  
+            }
         trainer = FBTrainer(
             model,
             training_args,
@@ -67,4 +79,7 @@ def train():
         run = wandb.init(project='Feedback-prize', entity='donggunseo', name='longformer-fold'+str(fold))
         trainer.train()
         run.finish()
-        trainer.save_model('best_model/longformer-baseline_best')
+        trainer.save_model('best_model/longformer-baseline_fold'+ str(fold))
+
+if __name__ == "__main__":
+    train()

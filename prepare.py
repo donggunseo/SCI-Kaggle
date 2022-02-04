@@ -6,13 +6,8 @@ import os
 from create_kfold import create_kfold
 from transformers import AutoTokenizer, DataCollatorForTokenClassification
 
-def prepare_datasets(kfold = 5):
-    #read csv
+def label_dict():
     train = pd.read_csv('../input/feedback-prize-2021/train.csv')
-    #kfold csv 
-    train_kfold, train = create_kfold(df=train, k=kfold)
-    #make label_to_id and id_to_label dict
-    
     classes = train.discourse_type.unique().tolist()
     tags = defaultdict()
     for i, c in enumerate(classes):
@@ -27,7 +22,17 @@ def prepare_datasets(kfold = 5):
     i2l[-100] = 'Special'
     i2l = dict(i2l)
     N_LABELS = len(i2l) - 1 # not accounting for -100
+    return i2l, l2i, N_LABELS
+
+def prepare_datasets(kfold = 5):
+    #read csv
+    train = pd.read_csv('../input/feedback-prize-2021/train.csv')
+    #kfold csv 
+    train_kfold, train = create_kfold(df=train, k=kfold)
+    #make label_to_id and id_to_label dict
     
+    i2l, l2i, N_LABELS = label_dict()
+
     #make csv for full text file
     train_names, train_texts = [], []
     for f in tqdm(list(os.listdir('../input/feedback-prize-2021/train'))):
@@ -69,6 +74,7 @@ def prepare_datasets(kfold = 5):
         total= len(encoding['input_ids'])
         encoding['word_ids']=[]
         encoding['labels']=[]
+        encoding['id']=[]
         for i in range(total):
             labels = [l2i['O'] for _ in range(len(encoding['input_ids'][i]))]
             word_idx = encoding.word_ids(batch_index=i)
@@ -81,7 +87,9 @@ def prepare_datasets(kfold = 5):
             labels = fix_beginnings(labels)
             encoding['labels'].append(labels)
             encoding['word_ids'].append(word_idx)
+            encoding['id'].append(examples['id'][i])
         return encoding
+    
     kfold_tokenized_datasets = []
     kfold_examples = []
     for i in range(kfold):
@@ -90,7 +98,7 @@ def prepare_datasets(kfold = 5):
         tokenized_datasets = datasets.map(preparing_train_dataset, batched=True, batch_size=1000, remove_columns=datasets.column_names)
         kfold_tokenized_datasets.append(tokenized_datasets)
         example = train[train['kfold']==i].reset_index(drop=True)
-        example_datasets = Dataset.from_pandas(example)
-        kfold_examples.append(example_datasets)
+        # example = Dataset.from_pandas(example)
+        kfold_examples.append(example)
     data_collator = DataCollatorForTokenClassification(tokenizer)
     return kfold_tokenized_datasets, l2i, i2l, N_LABELS, data_collator, kfold_examples, tokenizer

@@ -1,6 +1,7 @@
 import pandas as pd
 from tqdm import tqdm
-
+import numpy as np
+from prepare import label_dict
 
 def link_evidence(oof):
   if not len(oof):
@@ -115,4 +116,41 @@ def postprocess_fb_predictions(
     eval_datasets,
     predictions,
 ):
-    return None
+    print(predictions.shape)
+    preds = np.argmax(predictions, axis=-1)
+    i2l, l2i, N_LABELS = label_dict()
+    all_prediction = []
+    for k, label_pred in tqdm(enumerate(preds)):
+      token_preds = [i2l[i] for i in label_pred]
+      each_prediciton = []
+      word_ids = eval_datasets['word_ids'][k]
+      previous_word_idx = -1
+      for idx, word_idx in enumerate(word_ids):
+        if word_idx == None:
+          continue
+        elif word_idx != previous_word_idx:
+          each_prediciton.append(token_preds[idx])
+          previous_word_idx = word_idx
+      all_prediction.append(each_prediciton)
+    final_pred = []
+    for i in range(len(eval_datasets)):
+      idx = eval_datasets['id'][i]
+      pred = all_prediction[i]
+      j=0
+      while j < len(pred):
+        cls = pred[j]
+        if cls =='O': 
+            j+=1
+        else: 
+            cls = cls.replace('B', 'I')
+        end = j+1
+        while end < len(pred) and pred[end] == cls:
+            end +=1
+        if cls != 'O' and cls != '' and end-j>7:
+            final_pred.append((idx, cls.replace('I-', ''), ' '.join(map(str, list(range(j, end))))))
+        j = end
+    oof = pd.DataFrame(final_pred)
+    oof.columns = ['id', 'class', 'predictionstring']
+    
+    oof = link_evidence(oof)
+    return oof

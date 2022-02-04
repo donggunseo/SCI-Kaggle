@@ -35,7 +35,7 @@ class FBTrainer(Trainer):
             eval_preds = self.post_process_function(
                 eval_examples, eval_dataset, output.predictions
             )
-            metrics = self.compute_metrics(eval_preds)
+            metrics = self.compute_metrics(eval_examples ,eval_preds)
 
             self.log(metrics)
         else:
