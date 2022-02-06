@@ -19,7 +19,7 @@ def train():
         model = AutoModelForTokenClassification.from_pretrained('allenai/longformer-base-4096', config = config)
         training_args = TrainingArguments(
             output_dir = './output/longformer-baseline_fold'+ str(fold),
-            evaluation_strategy = 'steps',
+            evaluation_strategy = 'epoch',
             per_device_train_batch_size = 4,
             per_device_eval_batch_size = 4,
             gradient_accumulation_steps = 2,
@@ -30,11 +30,11 @@ def train():
             warmup_ratio = 0.1,
             logging_strategy = 'steps',
             logging_steps = 50,
-            save_strategy = 'steps',
+            save_strategy = 'epoch',
             save_total_limit = 1,
             seed = 42,
-            eval_steps = 100,
-            save_steps = 100,
+            # eval_steps = 100,
+            # save_steps = 100,
             dataloader_num_workers = 2,
             load_best_model_at_end = True,
             metric_for_best_model = 'f1',# need to fix
