@@ -3,3 +3,4 @@ output/
 .*/
 wandb/
 best_model/
+tmp_trainer/

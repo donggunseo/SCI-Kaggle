@@ -101,4 +101,4 @@ def prepare_datasets(kfold = 5):
         # example = Dataset.from_pandas(example)
         kfold_examples.append(example)
     data_collator = DataCollatorForTokenClassification(tokenizer)
-    return kfold_tokenized_datasets, l2i, i2l, N_LABELS, data_collator, kfold_examples, tokenizer
+    return kfold_tokenized_datasets, N_LABELS, data_collator, kfold_examples, tokenizer
