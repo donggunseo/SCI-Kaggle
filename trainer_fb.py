@@ -7,7 +7,7 @@ class FBTrainer(Trainer):
         self.eval_examples = eval_examples
         self.post_process_function = post_process_function
         
-    def evaluate(self, eval_dataset=None, ignore_keys=None):
+    def evaluate(self, eval_dataset=None, eval_examples=None, ignore_keys=None):
         eval_dataset = self.eval_dataset if eval_dataset is None else eval_dataset
         eval_dataloader = self.get_eval_dataloader(eval_dataset)
         eval_examples = self.eval_examples if eval_examples is None else eval_examples
