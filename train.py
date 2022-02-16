@@ -41,9 +41,8 @@ def train():
             group_by_length = True,
             report_to = 'wandb',
         )
-        def post_process_function(eval_examples, eval_datasets, predictions):
+        def post_process_function(eval_datasets, predictions):
             predictions = postprocess_fb_predictions2(
-                eval_examples = eval_examples,
                 eval_datasets = eval_datasets,
                 predictions=predictions
             )
