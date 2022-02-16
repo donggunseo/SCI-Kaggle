@@ -7,7 +7,7 @@ class FBTrainer(Trainer):
         self.eval_examples = eval_examples
         self.post_process_function = post_process_function
         
-    def evaluate(self, eval_dataset=None, eval_examples=None, ignore_keys=None):
+    def evaluate(self, eval_dataset=None, ignore_keys=None):
         eval_dataset = self.eval_dataset if eval_dataset is None else eval_dataset
         eval_dataloader = self.get_eval_dataloader(eval_dataset)
         eval_examples = self.eval_examples if eval_examples is None else eval_examples
@@ -33,7 +33,7 @@ class FBTrainer(Trainer):
             )
         if self.post_process_function is not None and self.compute_metrics is not None:
             eval_preds = self.post_process_function(
-                eval_examples, eval_dataset, output.predictions
+                eval_dataset, output.predictions
             )
             metrics = self.compute_metrics(eval_examples ,eval_preds)
 
@@ -46,34 +46,3 @@ class FBTrainer(Trainer):
         )
         
         return metrics
-    
-    def predict(self, test_dataset, test_examples, ignore_keys=None):
-        test_dataloader = self.get_test_dataloader(test_dataset)
-        
-        compute_metrics = self.compute_metrics
-        self.compute_metrics = None
-        try:
-            output = self.prediction_loop(
-                test_dataloader,
-                description="Evaluation",
-                # metric이 없으면 예측값을 모으는 이유가 없으므로 아래의 코드를 따르게 됩니다.
-                # self.args.prediction_loss_only
-                prediction_loss_only=True if compute_metrics is None else None,
-                ignore_keys=ignore_keys,
-            )
-        finally:
-            self.compute_metrics = compute_metrics
-
-        if self.post_process_function is None or self.compute_metrics is None:
-            return output
-
-        if isinstance(test_dataset, datasets.Dataset):
-            test_dataset.set_format(
-                type=test_dataset.format["type"],
-                columns=list(test_dataset.features.keys()),
-            )
-
-        predictions = self.post_process_function(
-            test_examples, test_dataset, output.predictions
-        )
-        return predictions

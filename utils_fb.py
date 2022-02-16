@@ -111,8 +111,13 @@ def score_feedback_comp(pred_df, gt_df):
     my_f1_score = TP / (TP + 0.5*(FP+FN))
     return my_f1_score
 
+def find_max_label(word_prediction_score):
+    x = np.sum(word_prediction_score, axis=0)
+    max_label = np.argmax(x, axis=-1)
+    return max_label
+
+
 def postprocess_fb_predictions(
-    eval_examples,
     eval_datasets,
     predictions,
 ):
@@ -147,6 +152,89 @@ def postprocess_fb_predictions(
         while end < len(pred) and pred[end] == cls:
             end +=1
         if cls != 'O' and cls != '' and end-j>7:
+            final_pred.append((idx, cls.replace('I-', ''), ' '.join(map(str, list(range(j, end))))))
+        j = end
+    oof = pd.DataFrame(final_pred)
+    oof.columns = ['id', 'class', 'predictionstring']
+    
+    # oof = link_evidence(oof)
+    return oof
+
+def postprocess_fb_predictions2(
+    eval_datasets,
+    predictions,
+):
+    proba_thresh = {
+    "Lead": 0.7,
+    "Position": 0.55,
+    "Evidence": 0.65,
+    "Claim": 0.55,
+    "Concluding Statement": 0.7,
+    "Counterclaim": 0.5,
+    "Rebuttal": 0.55,
+    }
+    #discourse length threshold
+    min_thresh = {
+        "Lead": 9,
+        "Position": 5,
+        "Evidence": 14,
+        "Claim": 3,
+        "Concluding Statement": 11,
+        "Counterclaim": 6,
+        "Rebuttal": 4,
+    }
+    print(predictions.shape)
+    preds = np.argmax(predictions, axis=-1)
+    pred_score = predictions
+    i2l, l2i, N_LABELS = label_dict()
+    all_prediction = []
+    all_pred_score=[]
+    for k, (label_pred, label_pred_score) in tqdm(enumerate(zip(preds, pred_score))):
+      each_prediction = []
+      each_prediction_score = []
+      word_ids = eval_datasets['word_ids'][k]
+      previous_word_idx = -1
+      word_prediction_score=[]
+      for idx, word_idx in enumerate(word_ids):
+        if word_idx == None:
+          continue
+        elif word_idx != previous_word_idx:
+          if len(word_prediction_score)!=0:
+            # find label which have the most score label following each tokens including in one word
+            max_label = find_max_label(word_prediction_score)
+            word_prediction_score = [word_prediction_score[i][max_label] for i in range(len(word_prediction_score))]
+            each_prediction_score.append(word_prediction_score)
+            each_prediction.append(i2l[max_label])
+          previous_word_idx = word_idx
+          word_prediction_score=[]
+          word_prediction_score.append(label_pred_score[idx])
+        else:
+          word_prediction_score.append(label_pred_score[idx])
+      max_label = find_max_label(word_prediction_score)
+      word_prediction_score = [word_prediction_score[i][max_label] for i in range(len(word_prediction_score))]  
+      each_prediction_score.append(word_prediction_score)
+      each_prediction.append(i2l[max_label])
+      all_prediction.append(each_prediction)
+      all_pred_score.append(each_prediction_score)
+    final_pred = []
+    for i in range(len(eval_datasets['id'])):
+      idx = eval_datasets['id'][i]
+      pred = all_prediction[i]
+      pred_score = all_pred_score[i]
+      j=0
+      while j < len(pred):
+        cls = pred[j]
+        if cls =='O': 
+            j+=1
+        else: 
+            cls = cls.replace('B', 'I')
+        end = j+1
+        while end < len(pred) and pred[end] == cls:
+            end +=1
+        final_pred_score = []
+        for item in pred_score[j:end]:
+          final_pred_score.extend(item)
+        if cls != 'O' and cls!='' and sum(final_pred_score)/len(final_pred_score)>=proba_thresh[cls.replace('I-', '')] and len(final_pred_score)>=min_thresh[cls.replace('I-', '')]:
             final_pred.append((idx, cls.replace('I-', ''), ' '.join(map(str, list(range(j, end))))))
         j = end
     oof = pd.DataFrame(final_pred)

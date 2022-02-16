@@ -3,7 +3,7 @@ from transformers import AutoModelForTokenClassification, TrainingArguments, Tra
 from datasets import concatenate_datasets
 from trainer_fb import FBTrainer
 import wandb
-from utils_fb import postprocess_fb_predictions, calc_overlap, score_feedback_comp
+from utils_fb import postprocess_fb_predictions2, score_feedback_comp
 import os
 import numpy as np
 def train():
@@ -18,15 +18,15 @@ def train():
         config.num_labels = N_LABELS
         model = AutoModelForTokenClassification.from_pretrained('allenai/longformer-base-4096', config = config)
         training_args = TrainingArguments(
-            output_dir = './output/longformer-baseline_fold'+ str(fold),
+            output_dir = './output/longformer-preprocess_fold'+ str(fold),
             evaluation_strategy = 'epoch',
-            per_device_train_batch_size = 4,
-            per_device_eval_batch_size = 4,
+            per_device_train_batch_size = 16,
+            per_device_eval_batch_size = 16,
             gradient_accumulation_steps = 2,
             learning_rate = 5e-5,
             weight_decay = 0.01,
             max_grad_norm = 10,
-            num_train_epochs = 8,
+            num_train_epochs = 10,
             warmup_ratio = 0.1,
             logging_strategy = 'steps',
             logging_steps = 50,
@@ -42,7 +42,7 @@ def train():
             report_to = 'wandb',
         )
         def post_process_function(eval_examples, eval_datasets, predictions):
-            predictions = postprocess_fb_predictions(
+            predictions = postprocess_fb_predictions2(
                 eval_examples = eval_examples,
                 eval_datasets = eval_datasets,
                 predictions=predictions
@@ -76,10 +76,10 @@ def train():
             post_process_function = post_process_function,
             compute_metrics=compute_metrics
         )
-        run = wandb.init(project='Feedback-prize', entity='donggunseo', name='longformer-fold'+str(fold))
+        run = wandb.init(project='Feedback-prize', entity='donggunseo', name='longformer-preprocess-fold'+str(fold))
         trainer.train()
         run.finish()
-        trainer.save_model('best_model/longformer-baseline_fold'+ str(fold))
+        trainer.save_model('best_model/longformer-preprocess_fold'+ str(fold))
 
 if __name__ == "__main__":
     train()

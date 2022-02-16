@@ -5,9 +5,10 @@ from datasets import Dataset
 import os
 from create_kfold import create_kfold
 from transformers import AutoTokenizer, DataCollatorForTokenClassification
+from preprocessing import preprocess
 
 def label_dict():
-    train = pd.read_csv('../input/feedback-prize-2021/train.csv')
+    train = preprocess()
     classes = train.discourse_type.unique().tolist()
     tags = defaultdict()
     for i, c in enumerate(classes):
