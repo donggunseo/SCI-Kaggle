@@ -187,6 +187,7 @@ def postprocess_fb_predictions2(
     print(predictions.shape)
     preds = np.argmax(predictions, axis=-1)
     softmax = torch.nn.Softmax(dim=-1)
+    predictions = torch.tensor(predictions)
     pred_score = softmax(predictions)
     pred_score = pred_score.numpy()
     i2l, l2i, N_LABELS = label_dict()
