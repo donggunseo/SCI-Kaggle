@@ -3,7 +3,7 @@ from transformers import AutoModelForTokenClassification, TrainingArguments, Tra
 from datasets import concatenate_datasets
 from trainer_fb import FBTrainer
 import wandb
-from utils_fb import postprocess_fb_predictions2, score_feedback_comp
+from utils_fb import postprocess_fb_predictions2, score_feedback_comp3
 import os
 import numpy as np
 def train():
@@ -26,7 +26,7 @@ def train():
             learning_rate = 5e-5,
             weight_decay = 0.01,
             max_grad_norm = 10,
-            num_train_epochs = 10,
+            num_train_epochs = 8,
             warmup_ratio = 0.1,
             logging_strategy = 'steps',
             logging_steps = 50,
@@ -48,22 +48,12 @@ def train():
             )
             return predictions
         def compute_metrics(eval_examples, eval_preds):
-            f1s=[]
-            for c in ['Lead', 'Position', 'Evidence', 'Claim', 'Concluding Statement', 'Counterclaim', 'Rebuttal']:
-                pred_df = eval_preds.loc[eval_preds['class']==c].copy()
-                gt_df = eval_examples.loc[eval_examples['discourse_type']==c].copy()
-                f1 = score_feedback_comp(pred_df, gt_df)
-                f1s.append(f1)
-            return {
-                "Lead F1": f1s[0],
-                "Position F1": f1s[1],
-                "Evidence F1": f1s[2],
-                "Claim F1" : f1s[3],
-                "Concluding Statement F1": f1s[4],
-                "Counterclaim F1": f1s[5],
-                "Rebuttal F1": f1s[6],
-                "eval_f1": np.mean(f1s)  
-            }
+            f1, class_scores = score_feedback_comp3(pred_df = eval_preds, 
+            gt_df = eval_examples, 
+            return_class_scores=True
+            )
+            class_scores['eval_f1']=f1
+            return class_scores
         trainer = FBTrainer(
             model,
             training_args,
