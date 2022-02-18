@@ -36,7 +36,7 @@ def prepare_datasets(kfold = 5):
 
     #make csv for full text file
     train_names, train_texts = [], []
-    for f in tqdm(list(os.listdir('../input/feedback-prize-2021/train'))):
+    for f in tqdm(list(os.listdir('../input/feedback-prize-2021/train')), desc = "reading txt file"):
         train_names.append(f.replace('.txt', ''))
         train_texts.append(open('../input/feedback-prize-2021/train/' + f, 'r', encoding='utf-8').read())
     train_text_df = pd.DataFrame({'id': train_names, 'text': train_texts})
@@ -45,7 +45,7 @@ def prepare_datasets(kfold = 5):
     # make NER label for each word sperated by split()
     all_entities = []
     all_text_list = []
-    for ii,i in tqdm(enumerate(train_text_df.iterrows())):
+    for ii,i in tqdm(enumerate(train_text_df.iterrows()), desc = "labeling"):
         text_list = i[1]['text'].split()
         total = text_list.__len__()
         entities = ["O"]*total
@@ -99,7 +99,6 @@ def prepare_datasets(kfold = 5):
         tokenized_datasets = datasets.map(preparing_train_dataset, batched=True, batch_size=1000, remove_columns=datasets.column_names)
         kfold_tokenized_datasets.append(tokenized_datasets)
         example = train[train['kfold']==i].reset_index(drop=True)
-        # example = Dataset.from_pandas(example)
         kfold_examples.append(example)
     data_collator = DataCollatorForTokenClassification(tokenizer)
     return kfold_tokenized_datasets, N_LABELS, data_collator, kfold_examples, tokenizer
