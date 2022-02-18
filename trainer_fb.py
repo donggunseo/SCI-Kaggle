@@ -32,9 +32,11 @@ class FBTrainer(Trainer):
                 columns=list(eval_dataset.features.keys()),
             )
         if self.post_process_function is not None and self.compute_metrics is not None:
+            print("post-processing")
             eval_preds = self.post_process_function(
                 eval_dataset, output.predictions
             )
+            print("metric computation")
             metrics = self.compute_metrics(eval_examples ,eval_preds)
 
             self.log(metrics)

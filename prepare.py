@@ -8,7 +8,7 @@ from transformers import AutoTokenizer, DataCollatorForTokenClassification
 from preprocessing import preprocess
 
 def label_dict():
-    train = preprocess()
+    train = pd.read_csv('../input/feedback-prize-2021/train.csv')
     classes = train.discourse_type.unique().tolist()
     tags = defaultdict()
     for i, c in enumerate(classes):
@@ -27,12 +27,12 @@ def label_dict():
 
 def prepare_datasets(kfold = 5):
     #read csv
-    train = pd.read_csv('../input/feedback-prize-2021/train.csv')
+    train = preprocess()
     #kfold csv 
     train_kfold, train = create_kfold(df=train, k=kfold)
     #make label_to_id and id_to_label dict
     
-    i2l, l2i, N_LABELS = label_dict()
+    _, l2i, N_LABELS = label_dict()
 
     #make csv for full text file
     train_names, train_texts = [], []

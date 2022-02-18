@@ -40,126 +40,10 @@ def link_evidence(oof):
     roof = roof.merge(neoof, how='outer')
     return roof
 
-def calc_overlap(row):
-    """
-    Calculates the overlap between prediction and
-    ground truth and overlap percentages used for determining
-    true positives.
-    """
-    set_pred = set(row.predictionstring_pred.split(' '))
-    set_gt = set(row.predictionstring_gt.split(' '))
-    # Length of each and intersection
-    len_gt = len(set_gt)
-    len_pred = len(set_pred)
-    inter = len(set_gt.intersection(set_pred))
-    overlap_1 = inter / len_gt
-    overlap_2 = inter/ len_pred
-    return [overlap_1, overlap_2]
-
-
-def score_feedback_comp(pred_df, gt_df):
-    """
-    A function that scores for the kaggle
-        Student Writing Competition
-        
-    Uses the steps in the evaluation page here:
-        https://www.kaggle.com/c/feedback-prize-2021/overview/evaluation
-    """
-    gt_df = gt_df[['id','discourse_type','predictionstring']] \
-        .reset_index(drop=True).copy()
-    pred_df = pred_df[['id','class','predictionstring']] \
-        .reset_index(drop=True).copy()
-    pred_df['pred_id'] = pred_df.index
-    gt_df['gt_id'] = gt_df.index
-    # Step 1. all ground truths and predictions for a given class are compared.
-    joined = pred_df.merge(gt_df,
-                           left_on=['id','class'],
-                           right_on=['id','discourse_type'],
-                           how='outer',
-                           suffixes=('_pred','_gt')
-                          )
-    joined['predictionstring_gt'] = joined['predictionstring_gt'].fillna(' ')
-    joined['predictionstring_pred'] = joined['predictionstring_pred'].fillna(' ')
-
-    joined['overlaps'] = joined.apply(calc_overlap, axis=1)
-
-    # 2. If the overlap between the ground truth and prediction is >= 0.5, 
-    # and the overlap between the prediction and the ground truth >= 0.5,
-    # the prediction is a match and considered a true positive.
-    # If multiple matches exist, the match with the highest pair of overlaps is taken.
-    joined['overlap1'] = joined['overlaps'].apply(lambda x: eval(str(x))[0])
-    joined['overlap2'] = joined['overlaps'].apply(lambda x: eval(str(x))[1])
-
-
-    joined['potential_TP'] = (joined['overlap1'] >= 0.5) & (joined['overlap2'] >= 0.5)
-    joined['max_overlap'] = joined[['overlap1','overlap2']].max(axis=1)
-    tp_pred_ids = joined.query('potential_TP') \
-        .sort_values('max_overlap', ascending=False) \
-        .groupby(['id','predictionstring_gt']).first()['pred_id'].values
-
-    # 3. Any unmatched ground truths are false negatives
-    # and any unmatched predictions are false positives.
-    fp_pred_ids = [p for p in joined['pred_id'].unique() if p not in tp_pred_ids]
-
-    matched_gt_ids = joined.query('potential_TP')['gt_id'].unique()
-    unmatched_gt_ids = [c for c in joined['gt_id'].unique() if c not in matched_gt_ids]
-
-    # Get numbers of each type
-    TP = len(tp_pred_ids)
-    FP = len(fp_pred_ids)
-    FN = len(unmatched_gt_ids)
-    #calc microf1
-    my_f1_score = TP / (TP + 0.5*(FP+FN))
-    return my_f1_score
-
 def find_max_label(word_prediction_score):
     x = np.sum(word_prediction_score, axis=0)
     max_label = np.argmax(x, axis=-1)
     return max_label
-
-
-def postprocess_fb_predictions(
-    eval_datasets,
-    predictions,
-):
-    print(predictions.shape)
-    preds = np.argmax(predictions, axis=-1)
-    i2l, l2i, N_LABELS = label_dict()
-    all_prediction = []
-    for k, label_pred in tqdm(enumerate(preds)):
-      token_preds = [i2l[i] for i in label_pred]
-      each_prediciton = []
-      word_ids = eval_datasets['word_ids'][k]
-      previous_word_idx = -1
-      for idx, word_idx in enumerate(word_ids):
-        if word_idx == None:
-          continue
-        elif word_idx != previous_word_idx:
-          each_prediciton.append(token_preds[idx])
-          previous_word_idx = word_idx
-      all_prediction.append(each_prediciton)
-    final_pred = []
-    for i in range(len(eval_datasets)):
-      idx = eval_datasets['id'][i]
-      pred = all_prediction[i]
-      j=0
-      while j < len(pred):
-        cls = pred[j]
-        if cls =='O': 
-            j+=1
-        else: 
-            cls = cls.replace('B', 'I')
-        end = j+1
-        while end < len(pred) and pred[end] == cls:
-            end +=1
-        if cls != 'O' and cls != '' and end-j>7:
-            final_pred.append((idx, cls.replace('I-', ''), ' '.join(map(str, list(range(j, end))))))
-        j = end
-    oof = pd.DataFrame(final_pred)
-    oof.columns = ['id', 'class', 'predictionstring']
-    
-    # oof = link_evidence(oof)
-    return oof
 
 def postprocess_fb_predictions2(
     eval_datasets,
@@ -185,15 +69,14 @@ def postprocess_fb_predictions2(
         "Rebuttal": 4,
     }
     print(predictions.shape)
-    preds = np.argmax(predictions, axis=-1)
     softmax = torch.nn.Softmax(dim=-1)
     predictions = torch.tensor(predictions)
     pred_score = softmax(predictions)
     pred_score = pred_score.numpy()
-    i2l, l2i, N_LABELS = label_dict()
+    i2l, _, _ = label_dict()
     all_prediction = []
     all_pred_score=[]
-    for k, (label_pred, label_pred_score) in tqdm(enumerate(zip(preds, pred_score))):
+    for k, label_pred_score in tqdm(enumerate(pred_score), desc = "post-processing"):
       each_prediction = []
       each_prediction_score = []
       word_ids = eval_datasets['word_ids'][k]
