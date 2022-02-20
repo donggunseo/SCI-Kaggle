@@ -6,6 +6,7 @@ numpy == 1.19.5
 jupyter == 1.0.0
 ipywidgets == 7.6.5
 tqdm == 4.62.3
-seqeval == 1.2.2
 datasets == 1.18.1
 wandb
+scikit-learn
+iterative-stratification

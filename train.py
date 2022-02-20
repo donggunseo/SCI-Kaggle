@@ -12,6 +12,7 @@ def train():
     kfold_tokenized_datasets, N_LABELS, data_collator, kfold_examples, tokenizer = prepare_datasets()
     kfold_num = len(kfold_tokenized_datasets)
     for fold in range(kfold_num):
+        if fold==0: continue
         valid_datasets = kfold_tokenized_datasets[fold]
         train_datasets = concatenate_datasets([kfold_tokenized_datasets[i].flatten_indices() for i in range(kfold_num) if i!=fold])
         valid_examples = kfold_examples[fold]
