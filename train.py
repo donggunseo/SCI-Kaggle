@@ -22,8 +22,8 @@ def train():
         training_args = TrainingArguments(
             output_dir = './output/longformer-large_fold'+ str(fold),
             evaluation_strategy = 'epoch',
-            per_device_train_batch_size = 3,
-            per_device_eval_batch_size = 3,
+            per_device_train_batch_size = 2,
+            per_device_eval_batch_size = 2,
             gradient_accumulation_steps = 1,
             learning_rate = 1e-5,
             weight_decay = 0.01,
