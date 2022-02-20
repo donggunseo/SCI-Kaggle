@@ -1,9 +1,10 @@
+from random import seed
 from prepare import prepare_datasets
 from transformers import AutoModelForTokenClassification, TrainingArguments, Trainer, AutoConfig
 from datasets import concatenate_datasets
 from trainer_fb import FBTrainer
 import wandb
-from utils_fb import postprocess_fb_predictions2, score_feedback_comp3
+from utils_fb import postprocess_fb_predictions2, score_feedback_comp3, seed_everything
 import os
 import numpy as np
 def train():
@@ -69,4 +70,5 @@ def train():
         trainer.save_model('best_model/longformer-preprocess_fold'+ str(fold))
 
 if __name__ == "__main__":
+    seed_everything(42)
     train()

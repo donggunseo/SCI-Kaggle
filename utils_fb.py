@@ -3,6 +3,17 @@ from tqdm import tqdm
 import numpy as np
 from prepare import label_dict
 import torch
+import random
+import os
+
+def seed_everything(seed):
+    random.seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = True
 
 def link_evidence(oof):
   if not len(oof):
@@ -85,6 +96,7 @@ def postprocess_fb_predictions2(
       for idx, word_idx in enumerate(word_ids):
         if word_idx == None:
           continue
+        
         elif word_idx != previous_word_idx:
           if len(word_prediction_score)!=0:
             # find label which have the most score label following each tokens including in one word
@@ -92,15 +104,19 @@ def postprocess_fb_predictions2(
             word_prediction_score = [word_prediction_score[i][max_label] for i in range(len(word_prediction_score))]
             each_prediction_score.append(word_prediction_score)
             each_prediction.append(i2l[max_label])
+          
           previous_word_idx = word_idx
           word_prediction_score=[]
           word_prediction_score.append(label_pred_score[idx])
+        
         else:
           word_prediction_score.append(label_pred_score[idx])
+      
       max_label = find_max_label(word_prediction_score)
       word_prediction_score = [word_prediction_score[i][max_label] for i in range(len(word_prediction_score))]  
       each_prediction_score.append(word_prediction_score)
       each_prediction.append(i2l[max_label])
+      
       all_prediction.append(each_prediction)
       all_pred_score.append(each_prediction_score)
     final_pred = []
