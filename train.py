@@ -12,19 +12,20 @@ def train():
     kfold_tokenized_datasets, N_LABELS, data_collator, kfold_examples, tokenizer = prepare_datasets()
     kfold_num = len(kfold_tokenized_datasets)
     for fold in range(kfold_num):
+        if fold!=0: break
         valid_datasets = kfold_tokenized_datasets[fold]
         train_datasets = concatenate_datasets([kfold_tokenized_datasets[i].flatten_indices() for i in range(kfold_num) if i!=fold])
         valid_examples = kfold_examples[fold]
-        config = AutoConfig.from_pretrained('allenai/longformer-base-4096')
+        config = AutoConfig.from_pretrained('allenai/longformer-large-4096')
         config.num_labels = N_LABELS
-        model = AutoModelForTokenClassification.from_pretrained('allenai/longformer-base-4096', config = config)
+        model = AutoModelForTokenClassification.from_pretrained('allenai/longformer-large-4096', config = config)
         training_args = TrainingArguments(
-            output_dir = './output/longformer-preprocess_fold'+ str(fold),
+            output_dir = './output/longformer-large_fold'+ str(fold),
             evaluation_strategy = 'epoch',
-            per_device_train_batch_size = 4,
-            per_device_eval_batch_size = 4,
+            per_device_train_batch_size = 3,
+            per_device_eval_batch_size = 3,
             gradient_accumulation_steps = 2,
-            learning_rate = 5e-5,
+            learning_rate = 1e-5,
             weight_decay = 0.01,
             max_grad_norm = 10,
             num_train_epochs = 8,
@@ -64,10 +65,10 @@ def train():
             post_process_function = post_process_function,
             compute_metrics=compute_metrics
         )
-        run = wandb.init(project='Feedback-prize', entity='donggunseo', name='longformer-preprocess-fold'+str(fold))
+        run = wandb.init(project='Feedback-prize', entity='donggunseo', name='longformer-large-fold'+str(fold))
         trainer.train()
         run.finish()
-        trainer.save_model('best_model/longformer-preprocess_fold'+ str(fold))
+        trainer.save_model('best_model/longformer-large_fold'+ str(fold))
 
 if __name__ == "__main__":
     seed_everything(42)

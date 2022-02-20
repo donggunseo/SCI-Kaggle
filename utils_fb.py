@@ -181,13 +181,13 @@ def score_feedback_comp_micro3(pred_df, gt_df, discourse_type):
     
     # Step 1. all ground truths and predictions for a given class are compared.
     joined = pred_df.merge(gt_df,
-                           left_on='id',
-                           right_on='id',
-                           how='outer',
-                           suffixes=('_pred','_gt')
+                          left_on='id',
+                          right_on='id',
+                          how='outer',
+                          suffixes=('_pred','_gt')
                           )
     overlaps = [calc_overlap3(*args) for args in zip(joined.predictionstring_pred, 
-                                                     joined.predictionstring_gt)]
+                                                    joined.predictionstring_gt)]
     
     # 2. If the overlap between the ground truth and prediction is >= 0.5, 
     # and the overlap between the prediction and the ground truth >= 0.5,
