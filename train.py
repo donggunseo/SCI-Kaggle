@@ -12,7 +12,6 @@ def train():
     kfold_tokenized_datasets, N_LABELS, data_collator, kfold_examples, tokenizer = prepare_datasets()
     kfold_num = len(kfold_tokenized_datasets)
     for fold in range(kfold_num):
-        if fold!=0: break
         valid_datasets = kfold_tokenized_datasets[fold]
         train_datasets = concatenate_datasets([kfold_tokenized_datasets[i].flatten_indices() for i in range(kfold_num) if i!=fold])
         valid_examples = kfold_examples[fold]
@@ -28,7 +27,7 @@ def train():
             learning_rate = 1e-5,
             weight_decay = 0.01,
             max_grad_norm = 10,
-            num_train_epochs = 8,
+            num_train_epochs = 6,
             warmup_ratio = 0.1,
             logging_strategy = 'steps',
             logging_steps = 50,

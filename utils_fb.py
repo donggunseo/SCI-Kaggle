@@ -137,7 +137,7 @@ def postprocess_fb_predictions2(
         final_pred_score = []
         for item in pred_score[j:end]:
           final_pred_score.extend(item)
-        if cls != 'O' and cls!='' and sum(final_pred_score)/len(final_pred_score)>=proba_thresh[cls.replace('I-', '')] and len(final_pred_score)>=min_thresh[cls.replace('I-', '')]:
+        if cls != 'O' and cls!='' and sum(final_pred_score)/len(final_pred_score)>=proba_thresh[cls.replace('I-', '')] and end-j>=min_thresh[cls.replace('I-', '')]:
             final_pred.append((idx, cls.replace('I-', ''), ' '.join(map(str, list(range(j, end))))))
         j = end
     oof = pd.DataFrame(final_pred)
