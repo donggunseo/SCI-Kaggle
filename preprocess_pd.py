@@ -112,10 +112,8 @@ def preprocess():
     results = get_new_predstr(id_df)
     df["new_predictionstring"] = results["new_predictionstring"]
 
-    # df.drop(['discourse_start', 'discourse_end', 'discourse_text', 'predictionstring'], axis='columns', inplace=True)
-    # df.rename(columns = {'new_start':'discourse_start', 'new_end':'discourse_end', 'new_discourse_text':'discourse_text', 'new_predictionstring':'predictionstring'}, inplace=True)
-    print(" change predictionstring: ", len(df[df.new_predictionstring != df.predictionstring]))
-    print(" change start/end: ", len(df[(df.new_start != df.discourse_start) | (df.new_end != df.discourse_end)]))
+    df.drop(['discourse_start', 'discourse_end', 'discourse_text', 'predictionstring'], axis='columns', inplace=True)
+    df.rename(columns = {'new_start':'discourse_start', 'new_end':'discourse_end', 'new_discourse_text':'discourse_text', 'new_predictionstring':'predictionstring'}, inplace=True)
+    # print(" change predictionstring: ", len(df[df.new_predictionstring != df.predictionstring]))
+    # print(" change start/end: ", len(df[(df.new_start != df.discourse_start) | (df.new_end != df.discourse_end)]))
     return df
-
-preprocess()
