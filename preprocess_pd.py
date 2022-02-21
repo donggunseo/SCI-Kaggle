@@ -11,7 +11,7 @@ TRAIN_DIR = BASE_DIR + 'train'
 
 df = pd.read_csv(BASE_DIR + "train.csv")
 
-def get_new_positions(examples):
+def get_new_positions(ids):
     """
     correction #1 : new_start, new_end
     """
@@ -19,9 +19,9 @@ def get_new_positions(examples):
     new_ends = []
     new_texts = []
   
-    for id_ in tqdm(examples["id"]):
+    for id_ in tqdm(ids):
         
-        with open(f"{TRAIN_DIR}/{id_}.txt") as fp:
+        with open(f"{TRAIN_DIR}/{id_}.txt",'r', encoding = 'utf-8') as fp:
             file_text = fp.read()
 
         discourse_data = df[df["id"] == id_]
@@ -68,15 +68,14 @@ def get_new_positions(examples):
         "text_by_new_index": new_texts
     }
 
-def get_new_predstr(examples):
+def get_new_predstr(ids):
     """
     correction #2 : predictionstring
     """
     new_pred_strings = []
-    discourse_ids = []
     
-    for id_ in tqdm(examples["id"]):
-        with open(f"{TRAIN_DIR}/{id_}.txt") as fp:
+    for id_ in tqdm(ids):
+        with open(f"{TRAIN_DIR}/{id_}.txt",'r', encoding = 'utf-8') as fp:
             file_text = fp.read()
 
         discourse_data = df[df["id"] == id_]
@@ -94,15 +93,14 @@ def get_new_predstr(examples):
             
             new_pred_strings.append(" ".join(list(map(str, range(start_word_id, end_word_id)))))
             
-            
     return {
         "new_predictionstring": new_pred_strings
     }
 
 def preprocess():       
 
-    id_df = df[['id']]
-
+    id_df = df['id'].unique()
+    print(id_df)
     # correction #1 : new_start, new_end
     results = get_new_positions(id_df)
     df["new_start"] = results["new_start"]
@@ -114,7 +112,10 @@ def preprocess():
     results = get_new_predstr(id_df)
     df["new_predictionstring"] = results["new_predictionstring"]
 
-    df.drop(['discourse_start', 'discourse_end', 'discourse_text', 'predictionstring'], axis='columns', inplace=True)
-    df.rename(columns = {'new_start':'discourse_start', 'new_end':'discourse_end', 'new_discourse_text':'discourse_text', 'new_predictionstring':'predictionstring'}, inplace=True)
-    
+    # df.drop(['discourse_start', 'discourse_end', 'discourse_text', 'predictionstring'], axis='columns', inplace=True)
+    # df.rename(columns = {'new_start':'discourse_start', 'new_end':'discourse_end', 'new_discourse_text':'discourse_text', 'new_predictionstring':'predictionstring'}, inplace=True)
+    print(" change predictionstring: ", len(df[df.new_predictionstring != df.predictionstring]))
+    print(" change start/end: ", len(df[(df.new_start != df.discourse_start) | (df.new_end != df.discourse_end)]))
     return df
+
+preprocess()
