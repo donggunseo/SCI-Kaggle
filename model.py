@@ -206,7 +206,8 @@ class CustomLongformerForTokenClassification(LongformerPreTrainedModel):
         logits5 = self.classifier(self.dropout5(sequence_output))
 
         logits = (logits1 + logits2 + logits3 + logits4 + logits5) / 5
-        print(logits.type())
+        print(logits)
+
 
         loss = None
         if labels is not None:
@@ -220,6 +221,7 @@ class CustomLongformerForTokenClassification(LongformerPreTrainedModel):
 
         if not return_dict:
             output = (logits,) + outputs[2:]
+            print('return dict is false')
             return ((loss,) + output) if loss is not None else output
 
         return LongformerTokenClassifierOutput(
