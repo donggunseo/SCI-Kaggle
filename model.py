@@ -4,12 +4,19 @@ from torch import nn
 from torch.nn import CrossEntropyLoss
 from collections import OrderedDict
 from typing import Optional, Tuple, Any
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
+import numpy as np
 
 
 _CHECKPOINT_FOR_DOC = "allenai/longformer-base-4096"
 _CONFIG_FOR_DOC = "LongformerConfig"
 _TOKENIZER_FOR_DOC = "LongformerTokenizer"
+
+
+def is_tensor(x):
+    if isinstance(x, torch.Tensor):
+        return True
+    return isinstance(x, np.ndarray)
 
 class ModelOutput(OrderedDict):
     """
@@ -23,7 +30,7 @@ class ModelOutput(OrderedDict):
     """
 
     def __post_init__(self):
-        class_fields = field(self)
+        class_fields = fields(self)
 
         # Safety and consistency checks
         if not len(class_fields):
