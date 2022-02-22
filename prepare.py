@@ -27,7 +27,7 @@ def label_dict():
 
 def prepare_datasets(kfold = 5):
     #read csv
-    train = preprocess()
+    train = pd.read_csv('../input/feedback-prize-2021/train_corrected.csv')
     #kfold csv 
     train_kfold, train = create_kfold(df=train, k=kfold)
     #make label_to_id and id_to_label dict

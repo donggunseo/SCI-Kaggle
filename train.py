@@ -18,7 +18,7 @@ def train():
         valid_examples = kfold_examples[fold]
         config = AutoConfig.from_pretrained('allenai/longformer-large-4096')
         config.num_labels = N_LABELS
-        model = AutoModelForTokenClassification.from_pretrained('allenai/longformer-large-4096', config = config)
+        model = CustomLongformerForTokenClassification.from_pretrained('allenai/longformer-large-4096', config = config)
         training_args = TrainingArguments(
             output_dir = './output/longformer-large-multidropout_fold'+ str(fold),
             evaluation_strategy = 'steps',
