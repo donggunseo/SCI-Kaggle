@@ -103,6 +103,7 @@ class ModelOutput(OrderedDict):
         """
         return tuple(self[k] for k in self.keys())
 
+@dataclass
 class LongformerTokenClassifierOutput(ModelOutput):
     """
     Base class for outputs of token classification models.
@@ -206,7 +207,6 @@ class CustomLongformerForTokenClassification(LongformerPreTrainedModel):
         logits5 = self.classifier(self.dropout5(sequence_output))
 
         logits = (logits1 + logits2 + logits3 + logits4 + logits5) / 5
-        print(logits)
 
 
         loss = None
@@ -221,7 +221,6 @@ class CustomLongformerForTokenClassification(LongformerPreTrainedModel):
 
         if not return_dict:
             output = (logits,) + outputs[2:]
-            print('return dict is false')
             return ((loss,) + output) if loss is not None else output
 
         return LongformerTokenClassifierOutput(
