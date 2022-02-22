@@ -23,7 +23,7 @@ class ModelOutput(OrderedDict):
     """
 
     def __post_init__(self):
-        class_fields = fields(self)
+        class_fields = field(self)
 
         # Safety and consistency checks
         if not len(class_fields):
