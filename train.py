@@ -12,7 +12,7 @@ def train():
     kfold_tokenized_datasets, N_LABELS, data_collator, kfold_examples, tokenizer = prepare_datasets()
     kfold_num = len(kfold_tokenized_datasets)
     for fold in range(kfold_num):
-        if fold==0: continue
+        if fold!=0: break
         valid_datasets = kfold_tokenized_datasets[fold]
         train_datasets = concatenate_datasets([kfold_tokenized_datasets[i].flatten_indices() for i in range(kfold_num) if i!=fold])
         valid_examples = kfold_examples[fold]
@@ -41,12 +41,6 @@ def train():
             group_by_length = True,
             report_to = 'wandb',
         )
-        def post_process_function(eval_datasets, predictions):
-            predictions = postprocess_fb_predictions2(
-                eval_datasets = eval_datasets,
-                predictions=predictions
-            )
-            return predictions
         def compute_metrics(eval_examples, eval_preds):
             f1, class_scores = score_feedback_comp3(pred_df = eval_preds, 
             gt_df = eval_examples, 
@@ -62,7 +56,7 @@ def train():
             eval_examples=valid_examples,
             data_collator=data_collator,
             tokenizer=tokenizer,
-            post_process_function = post_process_function,
+            post_process_function = postprocess_fb_predictions2,
             compute_metrics=compute_metrics
         )
         run = wandb.init(project='Feedback-prize', entity='donggunseo', name='longformer-large-fold'+str(fold))
