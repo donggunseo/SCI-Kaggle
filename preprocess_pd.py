@@ -1,35 +1,25 @@
-'''
-Completed preprocessing source code (maybe..)
-'''
-
 import re
-import string
-
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
-from datasets import Dataset
-from pathlib import Path
+#from datasets import Dataset
 
 PUNCTUATION = set(".,;")
 
 BASE_DIR = "../input/feedback-prize-2021/"
 TRAIN_DIR = BASE_DIR + 'train'
 
-
 df = pd.read_csv(BASE_DIR + "train.csv")
 
-
-def get_new_positions(examples):
+def get_new_positions(ids):
     """
     correction #1 : new_start, new_end
     """
-
     new_starts = []
     new_ends = []
     new_texts = []
-    
-    for id_ in tqdm(examples["id"]):
+  
+    for id_ in tqdm(ids):
         
         with open(f"{TRAIN_DIR}/{id_}.txt",'r', encoding = 'utf-8') as fp:
             file_text = fp.read()
@@ -61,7 +51,7 @@ def get_new_positions(examples):
             # There are some instances when there are multiple matches, 
             # so we'll take the closest one to the original discourse_start
             distances = [abs(disc_start-match.start()) for match in matches]
-            # print(distances, " ", id_ , "\n")
+
             idx = matches[np.argmin(distances)].start()                 # 시작점은 txt file index를 기준으로
 
             end_idx = idx + len(disc_text)          # 끝점은 disc_text 길이를 기준으로 맞추기
@@ -77,19 +67,15 @@ def get_new_positions(examples):
         "new_end": new_ends,
         "text_by_new_index": new_texts
     }
-    
-    
-def get_new_predstr(examples):
+
+def get_new_predstr(ids):
     """
     correction #2 : predictionstring
     """
     new_pred_strings = []
-    discourse_ids = []
     
-    for id_ in tqdm(examples["id"]):
-        
-        
-        with open(f"../input/feedback-prize-2021/train/{id_}.txt", 'r', encoding = 'utf-8') as fp:
+    for id_ in tqdm(ids):
+        with open(f"{TRAIN_DIR}/{id_}.txt",'r', encoding = 'utf-8') as fp:
             file_text = fp.read()
 
         discourse_data = df[df["id"] == id_]
@@ -110,35 +96,24 @@ def get_new_predstr(examples):
     return {
         "new_predictionstring": new_pred_strings
     }
-    
-def preprocess():       
-    dataset = Dataset.from_dict({"id": df["id"].unique()})   
 
+def preprocess():       
+
+    id_df = df['id'].unique()
+    print(id_df)
     # correction #1 : new_start, new_end
-    results = dataset.map(get_new_positions, batched=True, batch_size = 10000, num_proc=4, remove_columns=["id"])
+    results = get_new_positions(id_df)
+    df["new_start"] = results["new_start"]
     df["new_start"] = results["new_start"]
     df["new_end"] = results["new_end"]
     df["new_discourse_text"] = results["text_by_new_index"]
 
-    # correction #2 : predictionstring
-    results = dataset.map(get_new_predstr, batched=True, batch_size = 10000, num_proc=4, remove_columns=["id"])
+    # correction #2 : predictionstring 
+    results = get_new_predstr(id_df)
     df["new_predictionstring"] = results["new_predictionstring"]
+
     df.drop(['discourse_start', 'discourse_end', 'discourse_text', 'predictionstring'], axis='columns', inplace=True)
     df.rename(columns = {'new_start':'discourse_start', 'new_end':'discourse_end', 'new_discourse_text':'discourse_text', 'new_predictionstring':'predictionstring'}, inplace=True)
+    # print(" change predictionstring: ", len(df[df.new_predictionstring != df.predictionstring]))
+    # print(" change start/end: ", len(df[(df.new_start != df.discourse_start) | (df.new_end != df.discourse_end)]))
     return df
-
-# # save csv file
-# df.to_csv("correct_train.csv", index=False)
-
-# # for check
-# different_value_mask = df["new_predictionstring"] != df["predictionstring"]
-
-# for idx, row in df[different_value_mask].sample(n=5, random_state=18).iterrows():
-#     file_text = open(f"../input/feedback-prize-2021/train/{row.id}.txt").read()
-#     print("Old predictionstring=", row.predictionstring)
-#     print("New predictionstring=", row.new_predictionstring)
-#     print("words using old predictionstring=", [x for i, x in enumerate(file_text.split()) if i in list(map(int, row.predictionstring.split()))])
-#     print("words using new predictionstring=", [x for i, x in enumerate(file_text.split()) if i in list(map(int, row.new_predictionstring.split()))])
-#     print("new discourse text=", row.new_discourse_text)
-#     print(f"start_idx/end_idx= {row.new_start}/{row.new_end}")
-#     print("discourse_id=",row.discourse_id, "\n")
