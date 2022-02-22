@@ -4,7 +4,7 @@ from torch import nn
 from torch.nn import CrossEntropyLoss
 from collections import OrderedDict
 from typing import Optional, Tuple, Any
-
+from dataclasses import dataclass
 
 
 _CHECKPOINT_FOR_DOC = "allenai/longformer-base-4096"
