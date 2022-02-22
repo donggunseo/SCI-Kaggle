@@ -62,7 +62,7 @@ def train():
         run = wandb.init(project='Feedback-prize', entity='donggunseo', name='longformer-large-multidropout-fold'+str(fold))
         trainer.train()
         run.finish()
-        trainer.save_model('best_model/longformer-large-multidropout_fold'+ str(fold))
+        trainer.save_model('best_model2/longformer-large-multidropout_fold'+ str(fold))
 
 if __name__ == "__main__":
     seed_everything(42)
