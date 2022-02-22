@@ -1,6 +1,7 @@
 from random import seed
 from prepare import prepare_datasets
 from transformers import AutoModelForTokenClassification, TrainingArguments, Trainer, AutoConfig
+from model import CustomLongformerForTokenClassification
 from datasets import concatenate_datasets
 from trainer_fb import FBTrainer
 import wandb
@@ -12,15 +13,14 @@ def train():
     kfold_tokenized_datasets, N_LABELS, data_collator, kfold_examples, tokenizer = prepare_datasets()
     kfold_num = len(kfold_tokenized_datasets)
     for fold in range(kfold_num):
-        if fold!=0: break
         valid_datasets = kfold_tokenized_datasets[fold]
         train_datasets = concatenate_datasets([kfold_tokenized_datasets[i].flatten_indices() for i in range(kfold_num) if i!=fold])
         valid_examples = kfold_examples[fold]
         config = AutoConfig.from_pretrained('allenai/longformer-large-4096')
         config.num_labels = N_LABELS
-        model = AutoModelForTokenClassification.from_pretrained('allenai/longformer-large-4096', config = config)
+        model = CustomLongformerForTokenClassification.from_pretrained('allenai/longformer-large-4096', config = config)
         training_args = TrainingArguments(
-            output_dir = './output/longformer-large_fold'+ str(fold),
+            output_dir = './output/longformer-large-multidropout_fold'+ str(fold),
             evaluation_strategy = 'epoch',
             per_device_train_batch_size = 2,
             per_device_eval_batch_size = 2,
@@ -59,10 +59,10 @@ def train():
             post_process_function = postprocess_fb_predictions2,
             compute_metrics=compute_metrics
         )
-        run = wandb.init(project='Feedback-prize', entity='donggunseo', name='longformer-large-fold'+str(fold))
+        run = wandb.init(project='Feedback-prize', entity='donggunseo', name='longformer-large-multidropout-fold'+str(fold))
         trainer.train()
         run.finish()
-        trainer.save_model('best_model/longformer-large_fold'+ str(fold))
+        trainer.save_model('best_model/longformer-large-multidropout_fold'+ str(fold))
 
 if __name__ == "__main__":
     seed_everything(42)
