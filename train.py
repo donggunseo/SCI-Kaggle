@@ -21,7 +21,7 @@ def train():
         model = CustomLongformerForTokenClassification.from_pretrained('allenai/longformer-large-4096', config = config)
         training_args = TrainingArguments(
             output_dir = './output/longformer-large-multidropout_fold'+ str(fold),
-            evaluation_strategy = 'epoch',
+            evaluation_strategy = 'steps',
             per_device_train_batch_size = 2,
             per_device_eval_batch_size = 2,
             gradient_accumulation_steps = 1,
@@ -32,7 +32,9 @@ def train():
             warmup_ratio = 0.1,
             logging_strategy = 'steps',
             logging_steps = 50,
-            save_strategy = 'epoch',
+            eval_steps = 100,
+            save_strategy = 'steps',
+            save_steps = 100,
             save_total_limit = 1,
             seed = 42,
             dataloader_num_workers = 2,

@@ -199,16 +199,11 @@ class CustomLongformerForTokenClassification(LongformerPreTrainedModel):
         sequence_output = outputs[0]
 
         sequence_output = self.dropout(sequence_output)
-        sequence_output1 = self.dropout1(sequence_output)
-        sequence_output2 = self.dropout2(sequence_output)
-        sequence_output3 = self.dropout3(sequence_output)
-        sequence_output4 = self.dropout4(sequence_output)
-        sequence_output5 = self.dropout5(sequence_output)
-        logits1 = self.classifier(sequence_output1)
-        logits2 = self.classifier(sequence_output2)
-        logits3 = self.classifier(sequence_output3)
-        logits4 = self.classifier(sequence_output4)
-        logits5 = self.classifier(sequence_output5)
+        logits1 = self.classifier(self.dropout1(sequence_output))
+        logits2 = self.classifier(self.dropout2(sequence_output))
+        logits3 = self.classifier(self.dropout3(sequence_output))
+        logits4 = self.classifier(self.dropout4(sequence_output))
+        logits5 = self.classifier(self.dropout5(sequence_output))
 
         logits = (logits1 + logits2 + logits3 + logits4 + logits5) / 5
 
