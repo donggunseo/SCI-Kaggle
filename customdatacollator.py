@@ -1,4 +1,4 @@
-from transformers import DataCollatorForTokenClassificaton
+from transformers import DataCollatorForTokenClassification
 from dataclasses import dataclass
 import torch
 
