@@ -6,6 +6,7 @@ import os
 from create_kfold import create_kfold
 from transformers import AutoTokenizer, DataCollatorForTokenClassification
 from preprocess_pd import preprocess
+from customdatacollator import CustomDatacollator
 
 def label_dict():
     train = pd.read_csv('../input/feedback-prize-2021/train.csv')
@@ -100,5 +101,5 @@ def prepare_datasets(kfold = 5):
         kfold_tokenized_datasets.append(tokenized_datasets)
         example = train[train['kfold']==i].reset_index(drop=True)
         kfold_examples.append(example)
-    data_collator = DataCollatorForTokenClassification(tokenizer)
+    data_collator = CustomDatacollator(tokenizer)
     return kfold_tokenized_datasets, N_LABELS, data_collator, kfold_examples, tokenizer
