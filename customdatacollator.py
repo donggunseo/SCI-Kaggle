@@ -3,7 +3,7 @@ from dataclasses import dataclass
 import torch
 
 @dataclass
-class CustomDatacollator(DataCollatorForTokenClassificaton):
+class CustomDatacollator(DataCollatorForTokenClassification):
 
         def torch_call(self, features):
 
