@@ -10,7 +10,8 @@ import os
 import numpy as np
 def train():
     os.environ["TOKENIZERS_PARALLELISM"] = "false"
-    kfold_tokenized_datasets, N_LABELS, data_collator, kfold_examples, tokenizer = prepare_datasets()
+    # kfold_tokenized_datasets, N_LABELS, data_collator, kfold_examples, tokenizer = prepare_datasets()
+    kfold_tokenized_datasets, N_LABELS, kfold_examples, tokenizer = prepare_datasets()
     kfold_num = len(kfold_tokenized_datasets)
     for fold in range(kfold_num):
         valid_datasets = kfold_tokenized_datasets[fold]
@@ -20,7 +21,8 @@ def train():
         config.num_labels = N_LABELS
         model = CustomLongformerForTokenClassification.from_pretrained('allenai/longformer-large-4096', config = config)
         training_args = TrainingArguments(
-            output_dir = './output/longformer-large-multidropout-customdatacollator_fold'+ str(fold),
+            # output_dir = './output/longformer-large-multidropout-customdatacollator_fold'+ str(fold),
+            output_dir = './output/longformer-test'+ str(fold),
             evaluation_strategy = 'epoch',
             per_device_train_batch_size = 2,
             per_device_eval_batch_size = 2,
@@ -54,15 +56,17 @@ def train():
             train_dataset=train_datasets,
             eval_dataset=valid_datasets,
             eval_examples=valid_examples,
-            data_collator=data_collator,
+            # data_collator=data_collator,
             tokenizer=tokenizer,
             post_process_function = postprocess_fb_predictions2,
             compute_metrics=compute_metrics
         )
-        run = wandb.init(project='Feedback-prize', entity='donggunseo', name='longformer-large-multidropout-customdatacollator-fold'+str(fold))
+        # run = wandb.init(project='Feedback-prize', entity='donggunseo', name='longformer-large-multidropout-customdatacollator-fold'+str(fold))
+        run = wandb.init(project='Feedback-prize', entity='donggunseo', name='test'+str(fold))
         trainer.train()
         run.finish()
-        trainer.save_model('best_model3/longformer-large-multidropout-customdatacollator_fold'+ str(fold))
+        # trainer.save_model('best_model3/longformer-large-multidropout-customdatacollator_fold'+ str(fold))
+        trainer.save_model('best_model/test'+ str(fold))
 
 if __name__ == "__main__":
     seed_everything(42)
