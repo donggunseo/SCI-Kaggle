@@ -101,6 +101,5 @@ def prepare_datasets(kfold = 5):
         kfold_tokenized_datasets.append(tokenized_datasets)
         example = train[train['kfold']==i].reset_index(drop=True)
         kfold_examples.append(example)
-    # data_collator = CustomDatacollator(tokenizer)
-    # return kfold_tokenized_datasets, N_LABELS, data_collator, kfold_examples, tokenizer
-    return kfold_tokenized_datasets, N_LABELS, kfold_examples, tokenizer
+    data_collator = CustomDatacollator(tokenizer)
+    return kfold_tokenized_datasets, N_LABELS, data_collator, kfold_examples, tokenizer
