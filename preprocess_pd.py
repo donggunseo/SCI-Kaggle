@@ -117,3 +117,7 @@ def preprocess():
     # print(" change predictionstring: ", len(df[df.new_predictionstring != df.predictionstring]))
     # print(" change start/end: ", len(df[(df.new_start != df.discourse_start) | (df.new_end != df.discourse_end)]))
     return df
+
+if __name__ == "__main__":
+    df = preprocess()
+    df.to_csv('../input/feedback-prize-2021/train_corrected.csv')
