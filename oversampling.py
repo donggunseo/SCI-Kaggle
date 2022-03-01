@@ -167,7 +167,7 @@ if __name__ == "__main__":
     new_df = df.copy()
     print(len(new_df))
     new_df_list = np.array_split(new_df, 80)
-    new_df_list = Parallel(n_jobs = 80, backend = 'multiprocessing')(delayed(oversampling)(glove_model, train_text_df, add_ids, temp_df) for temp_df in tqdm(new_df_list))
+    new_df_list = Parallel(n_jobs = 80, backend = 'multiprocessing', verbose=20)(delayed(oversampling)(glove_model, train_text_df, add_ids, temp_df) for temp_df in new_df_list)
     new_df = pd.concat(new_df_list, ignore_index=True)
     new_df.to_csv('train_oversampled.csv', index=False)
     combined_df = pd.concat([df, new_df], ignore_index=True)
