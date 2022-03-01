@@ -125,7 +125,7 @@ def oversampling(glove_model, train_text_df, add_ids, df):
         # save txt 
         with open(SAVE_DIR+ '/{0}.txt'.format(new_id), 'w', encoding = 'utf-8') as f:
             f.write(text)
-        # print("new_id: {0} \t Add {2} discourse types. (# of synonym raplacement: {3}, # of correction misspelling: {4}".format(new_id, len(new_df), len(examples), count, correction_count))     
+        print("new_id: {0} \t Add {1} discourse types. ".format(new_id, len(examples)))     
     print("complete oversampling --  total new rows : ", len(new_df))         
     return new_df
 
