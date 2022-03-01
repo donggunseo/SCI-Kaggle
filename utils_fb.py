@@ -85,40 +85,7 @@ def postprocess_fb_predictions2(
     pred_score = softmax(predictions)
     pred_score = pred_score.numpy()
     i2l, _, _ = label_dict()
-    all_prediction = []
-    all_pred_score=[]
-    for k, label_pred_score in tqdm(enumerate(pred_score), desc = "post-processing"):
-      each_prediction = []
-      each_prediction_score = []
-      word_ids = eval_datasets['word_ids'][k]
-      previous_word_idx = -1
-      word_prediction_score=[]
-      for idx, word_idx in enumerate(word_ids):
-        if word_idx == None:
-          continue
-        
-        elif word_idx != previous_word_idx:
-          if len(word_prediction_score)!=0:
-            # find label which have the most score label following each tokens including in one word
-            max_label = find_max_label(word_prediction_score)
-            word_prediction_score = [word_prediction_score[i][max_label] for i in range(len(word_prediction_score))]
-            each_prediction_score.append(word_prediction_score)
-            each_prediction.append(i2l[max_label])
-          
-          previous_word_idx = word_idx
-          word_prediction_score=[]
-          word_prediction_score.append(label_pred_score[idx])
-        
-        else:
-          word_prediction_score.append(label_pred_score[idx])
-      
-      max_label = find_max_label(word_prediction_score)
-      word_prediction_score = [word_prediction_score[i][max_label] for i in range(len(word_prediction_score))]  
-      each_prediction_score.append(word_prediction_score)
-      each_prediction.append(i2l[max_label])
-      
-      all_prediction.append(each_prediction)
-      all_pred_score.append(each_prediction_score)
+    all_prediction, all_pred_score = token_to_word(pred_score, eval_datasets, i2l)
     final_pred = []
     for i in range(len(eval_datasets['id'])):
       idx = eval_datasets['id'][i]
@@ -214,3 +181,39 @@ def score_feedback_comp3(pred_df, gt_df, return_class_scores=False):
     if return_class_scores:
         return f1, class_scores
     return f1
+
+def token_to_word(pred_score, eval_datasets, i2l):
+  all_prediction = []
+  all_pred_score=[]
+  for k, label_pred_score in tqdm(enumerate(pred_score), desc = "post-processing"):
+    each_prediction = []
+    each_prediction_score = []
+    word_ids = eval_datasets['word_ids'][k]
+    previous_word_idx = -1
+    word_prediction_score=[]
+    for idx, word_idx in enumerate(word_ids):
+      if word_idx == None:
+        continue
+      
+      elif word_idx != previous_word_idx:
+        if len(word_prediction_score)!=0:
+          # find label which have the most score label following each tokens including in one word
+          max_label = find_max_label(word_prediction_score)
+          word_prediction_score = [word_prediction_score[i][max_label] for i in range(len(word_prediction_score))]
+          each_prediction_score.append(word_prediction_score)
+          each_prediction.append(i2l[max_label])
+        
+        previous_word_idx = word_idx
+        word_prediction_score=[]
+        word_prediction_score.append(label_pred_score[idx])
+      
+      else:
+        word_prediction_score.append(label_pred_score[idx])
+    
+    max_label = find_max_label(word_prediction_score)
+    word_prediction_score = [word_prediction_score[i][max_label] for i in range(len(word_prediction_score))]  
+    each_prediction_score.append(word_prediction_score)
+    each_prediction.append(i2l[max_label])
+    all_prediction.append(each_prediction)
+    all_pred_score.append(each_prediction_score)
+  return all_prediction, all_pred_score

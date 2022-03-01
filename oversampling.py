@@ -98,13 +98,13 @@ def do_change(glove_model, example, txt):
 
 def oversampling(glove_model, train_text_df, add_ids, df):
     new_df = pd.DataFrame(columns=df.columns)
-    for id in tqdm(add_ids):
+    for id in add_ids:
         count = 0
         new_id = "{0}_S".format(id)
         
         examples = df[df.id == id]          # id의 모든 discourse type 행을 추출
         text = train_text_df[train_text_df.id == id]['text'].values[0]  # id에 맞는 원본 text를 로드
-        
+        if examples.empty: continue
         for i, example in examples.iterrows(): 
             # id내 annotation된 discourse type을 살피면서 워드를 바꾼다.
             # Rebuttal, Counterclaim인 경우, 무조건 바꿈
@@ -167,7 +167,7 @@ if __name__ == "__main__":
     new_df = df.copy()
     print(len(new_df))
     new_df_list = np.array_split(new_df, 80)
-    new_df_list = Parallel(n_jobs = 80, backend = 'multiprocessing')(delayed(oversampling)(glove_model, train_text_df, add_ids, temp_df) for temp_df in new_df_list)
+    new_df_list = Parallel(n_jobs = 80, backend = 'multiprocessing')(delayed(oversampling)(glove_model, train_text_df, add_ids, temp_df) for temp_df in tqdm(new_df_list))
     new_df = pd.concat(new_df_list, ignore_index=True)
     new_df.to_csv('train_oversampled.csv', index=False)
     combined_df = pd.concat([df, new_df], ignore_index=True)
