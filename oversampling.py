@@ -9,6 +9,7 @@ from numpy import dot
 from numpy.linalg import norm
 import nltk
 from utils_fb import seed_everything
+from joblib import Parallel, delayed
 nltk.download('averaged_perceptron_tagger')
 
 BASE_DIR = "../input/feedback-prize-2021/"
@@ -135,7 +136,7 @@ def prepare_oversample():
         
         return example, txt, correction_count
 
-    def oversamplig(df):
+    def oversampling(df):
         new_df = pd.DataFrame(columns=df.columns)
         for id in tqdm(add_ids):
             count = 0
@@ -169,7 +170,9 @@ def prepare_oversample():
         return new_df
     new_df = df.copy()
     print(len(new_df))
-    new_df = oversamplig(new_df)
+    new_df_list = Parallel(n_jobs = 80, backend = 'multiprocessing')(delayed(oversampling)(temp_df) for temp_df in np.array_split(new_df, 80))
+    # new_df = oversampling(new_df)
+    new_df = pd.concat(new_df_list, ignore_index=True)
     new_df.to_csv('train_oversampled.csv', index=False)
     combined_df = pd.concat([df, new_df], ignore_index=True)
     combined_df.to_csv('train_corrected_oversampled.csv', index=False)
