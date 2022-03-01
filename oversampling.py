@@ -170,7 +170,8 @@ def prepare_oversample():
         return new_df
     new_df = df.copy()
     print(len(new_df))
-    new_df_list = Parallel(n_jobs = 80, backend = 'multiprocessing')(delayed(oversampling)(temp_df) for temp_df in np.array_split(new_df, 80))
+    new_df_list = np.array_split(new_df, 80)
+    new_df_list = Parallel(n_jobs = 80, backend = 'multiprocessing')(delayed(oversampling)(temp_df) for temp_df in new_df_list)
     # new_df = oversampling(new_df)
     new_df = pd.concat(new_df_list, ignore_index=True)
     new_df.to_csv('train_oversampled.csv', index=False)
