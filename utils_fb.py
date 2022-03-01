@@ -1,3 +1,4 @@
+from turtle import back
 import pandas as pd
 from tqdm import tqdm
 import numpy as np
@@ -5,6 +6,7 @@ from prepare import label_dict
 import torch
 import random
 import os
+from joblib import Parallel, delayed
 
 def seed_everything(seed):
     random.seed(seed)
@@ -85,7 +87,16 @@ def postprocess_fb_predictions2(
     pred_score = softmax(predictions)
     pred_score = pred_score.numpy()
     i2l, _, _ = label_dict()
-    all_prediction, all_pred_score = token_to_word(pred_score, eval_datasets, i2l)
+    word_id_list = list(eval_datasets['word_ids'])
+    pred_score = np.array_split(pred_score, 10)
+    word_id_list = np.array_split(word_id_list, 10)
+    # all_prediction, all_pred_score = token_to_word(pred_score, eval_datasets, i2l)
+    results = Parallel(n_jobs=10, backend='multiprocessing', verbose=1)(delayed(token_to_word)(pred_score_t, word_id_list_t, i2l) for pred_score_t, word_id_list_t in zip(pred_score, word_id_list))
+    all_prediction = []
+    all_pred_score=[]
+    for result in results:
+      all_prediction.extend(result[0])
+      all_pred_score.extend(result[1])
     final_pred = []
     for i in range(len(eval_datasets['id'])):
       idx = eval_datasets['id'][i]
@@ -182,19 +193,18 @@ def score_feedback_comp3(pred_df, gt_df, return_class_scores=False):
         return f1, class_scores
     return f1
 
-def token_to_word(pred_score, eval_datasets, i2l):
+def token_to_word(pred_score, word_id_list, i2l):
   all_prediction = []
   all_pred_score=[]
   for k, label_pred_score in tqdm(enumerate(pred_score), desc = "post-processing"):
     each_prediction = []
     each_prediction_score = []
-    word_ids = eval_datasets['word_ids'][k]
+    word_ids = word_id_list[k]
     previous_word_idx = -1
     word_prediction_score=[]
     for idx, word_idx in enumerate(word_ids):
       if word_idx == None:
         continue
-      
       elif word_idx != previous_word_idx:
         if len(word_prediction_score)!=0:
           # find label which have the most score label following each tokens including in one word
@@ -202,14 +212,11 @@ def token_to_word(pred_score, eval_datasets, i2l):
           word_prediction_score = [word_prediction_score[i][max_label] for i in range(len(word_prediction_score))]
           each_prediction_score.append(word_prediction_score)
           each_prediction.append(i2l[max_label])
-        
         previous_word_idx = word_idx
         word_prediction_score=[]
         word_prediction_score.append(label_pred_score[idx])
-      
       else:
         word_prediction_score.append(label_pred_score[idx])
-    
     max_label = find_max_label(word_prediction_score)
     word_prediction_score = [word_prediction_score[i][max_label] for i in range(len(word_prediction_score))]  
     each_prediction_score.append(word_prediction_score)
