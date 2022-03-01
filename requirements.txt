@@ -10,3 +10,5 @@ datasets
 wandb
 scikit-learn
 iterative-stratification
+autocorrect
+nltk
