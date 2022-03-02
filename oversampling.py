@@ -98,7 +98,7 @@ def do_change(glove_model, example, txt):
 
 def oversampling(glove_model, train_text_df, add_ids, df):
     new_df = pd.DataFrame(columns=df.columns)
-    for id in add_ids:
+    for id in tqdm(add_ids):
         count = 0
         new_id = "{0}_S".format(id)
         
@@ -166,9 +166,7 @@ if __name__ == "__main__":
     print(f"{len(glove_model)} words loaded!")
     new_df = df.copy()
     print(len(new_df))
-    new_df_list = np.array_split(new_df, 100)
-    new_df_list = Parallel(n_jobs = 100, verbose=1)(delayed(oversampling)(glove_model, train_text_df, add_ids, temp_df) for temp_df in new_df_list)
-    new_df = pd.concat(new_df_list, ignore_index=True)
+    new_df = oversampling(glove_model, train_text_df, add_ids, new_df)
     new_df.to_csv('train_oversampled.csv', index=False)
     combined_df = pd.concat([df, new_df], ignore_index=True)
     combined_df.to_csv('train_corrected_oversampled.csv', index=False)

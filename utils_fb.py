@@ -88,15 +88,7 @@ def postprocess_fb_predictions2(
     pred_score = pred_score.numpy()
     i2l, _, _ = label_dict()
     word_id_list = list(eval_datasets['word_ids'])
-    pred_score = np.array_split(pred_score, 10)
-    word_id_list = np.array_split(word_id_list, 10)
-    # all_prediction, all_pred_score = token_to_word(pred_score, eval_datasets, i2l)
-    results = Parallel(n_jobs=10, backend='multiprocessing', verbose=1)(delayed(token_to_word)(pred_score_t, word_id_list_t, i2l) for pred_score_t, word_id_list_t in zip(pred_score, word_id_list))
-    all_prediction = []
-    all_pred_score=[]
-    for result in results:
-      all_prediction.extend(result[0])
-      all_pred_score.extend(result[1])
+    all_prediction, all_pred_score = token_to_word(pred_score, word_id_list, i2l)
     final_pred = []
     for i in range(len(eval_datasets['id'])):
       idx = eval_datasets['id'][i]
