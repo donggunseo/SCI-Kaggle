@@ -18,6 +18,9 @@ SAVE_DIR = BASE_DIR + 'train_oversamples'
 DISCOURSE_TYPES = ['Rebuttal', 'Counterclaim', 'Lead', 'Concluding Statement', 'Claim', 'Position', 'Evidence']
 WEAK_DISCOURSE_TYPES = ['Rebuttal', 'Counterclaim']
 FULL_DISCOURSE_TYPES = ['Lead', 'Concluding Statement', 'Claim', 'Position', 'Evidence']
+
+# download link (globe.6B series)
+# http://downloads.cs.stanford.edu/nlp/data/glove.6B.zip
 GLOVE_PATH = '../glove/glove.6B/glove.6B.50d.txt'
 
 def open_txt():
