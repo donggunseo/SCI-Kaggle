@@ -1,0 +1,14 @@
+pip 
+pandas 
+transformers 
+torch 
+numpy 
+jupyter 
+ipywidgets 
+tqdm 
+datasets 
+wandb
+scikit-learn
+iterative-stratification
+autocorrect
+nltk
