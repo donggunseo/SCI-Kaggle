@@ -161,12 +161,15 @@ class CustomLongformerForTokenClassification(LongformerPreTrainedModel):
 
         self.longformer = LongformerModel(config, add_pooling_layer=False)
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
+        self.lstm = nn.LSTM(input_size= config.hidden_size, hidden_size= config.hidden_size, num_layers= 2, dropout= 0.1, batch_first= True, bidirectional= True)
+        self.LayerNorm_LSTM = nn.LayerNorm(config.hidden_size*2, eps=config.layer_norm_eps)
+        self.dropout_lstm = nn.Dropout(config.hidden_dropout_prob)
         self.dropout1 = nn.Dropout(0.1)
         self.dropout2 = nn.Dropout(0.2)
         self.dropout3 = nn.Dropout(0.3)
         self.dropout4 = nn.Dropout(0.4)
         self.dropout5 = nn.Dropout(0.5)
-        self.classifier = nn.Linear(config.hidden_size, config.num_labels)
+        self.classifier = nn.Linear(config.hidden_size*2, config.num_labels)
 
         # Initialize weights and apply final processing
         self.post_init()
@@ -207,6 +210,9 @@ class CustomLongformerForTokenClassification(LongformerPreTrainedModel):
         sequence_output = outputs[0]
 
         sequence_output = self.dropout(sequence_output)
+        sequence_output,_ = self.lstm(sequence_output)
+        sequence_output = self.LayerNorm_LSTM(sequence_output)
+        sequence_output = self.dropout_lstm(sequence_output)
         logits1 = self.classifier(self.dropout1(sequence_output))
         logits2 = self.classifier(self.dropout2(sequence_output))
         logits3 = self.classifier(self.dropout3(sequence_output))
